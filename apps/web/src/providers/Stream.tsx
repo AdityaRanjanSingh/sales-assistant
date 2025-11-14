@@ -121,23 +121,27 @@ const StreamSession = ({
 };
 
 // Default values for the form
-const DEFAULT_API_URL = "http://localhost:2024";
 const DEFAULT_ASSISTANT_ID = "agent";
 
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  // Get environment variables
-  const envApiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
+  // NEXT_PUBLIC_API_URL is required and must be set in environment variables
+  const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  if (!envApiUrl) {
+    throw new Error(
+      "NEXT_PUBLIC_API_URL environment variable is required. Please set it in your deployment environment."
+    );
+  }
+
+  // Get optional environment variables
   const envAssistantId: string | undefined =
     process.env.NEXT_PUBLIC_ASSISTANT_ID;
   const envApiKey: string | undefined =
     process.env.NEXT_PUBLIC_LANGSMITH_API_KEY;
 
-  // Use URL params with env var fallbacks
-  const [apiUrl, setApiUrl] = useQueryState("apiUrl", {
-    defaultValue: envApiUrl || "",
-  });
+  // Use URL params with env var fallbacks for optional values
   const [assistantId, setAssistantId] = useQueryState("assistantId", {
     defaultValue: envAssistantId || "",
   });
@@ -153,12 +157,11 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     _setApiKey(key);
   };
 
-  // Determine final values to use, prioritizing URL params then env vars
-  const finalApiUrl = apiUrl || envApiUrl;
+  // Determine final values to use
   const finalAssistantId = assistantId || envAssistantId;
 
-  // If we're missing any required values, show the form
-  if (!finalApiUrl || !finalAssistantId) {
+  // If we're missing the assistant ID, show the configuration form
+  if (!finalAssistantId) {
     return (
       <div className="flex items-center justify-center min-h-screen w-full p-4">
         <div className="animate-in fade-in-0 zoom-in-95 flex flex-col border bg-background shadow-lg rounded-lg max-w-3xl">
@@ -171,7 +174,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             </div>
             <p className="text-muted-foreground">
               Welcome to Agent Chat! Before you get started, you need to enter
-              the URL of the deployment and the assistant / graph ID.
+              the assistant / graph ID and optionally your API key.
             </p>
           </div>
           <form
@@ -180,11 +183,9 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 
               const form = e.target as HTMLFormElement;
               const formData = new FormData(form);
-              const apiUrl = formData.get("apiUrl") as string;
               const assistantId = formData.get("assistantId") as string;
               const apiKey = formData.get("apiKey") as string;
 
-              setApiUrl(apiUrl);
               setApiKey(apiKey);
               setAssistantId(assistantId);
 
@@ -193,20 +194,13 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             className="flex flex-col gap-6 p-6 bg-muted/50"
           >
             <div className="flex flex-col gap-2">
-              <Label htmlFor="apiUrl">
-                Deployment URL<span className="text-rose-500">*</span>
-              </Label>
+              <Label htmlFor="apiUrl">Deployment URL</Label>
               <p className="text-muted-foreground text-sm">
-                This is the URL of your LangGraph deployment. Can be a local, or
-                production deployment.
+                This is configured via environment variables and set to:{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">
+                  {envApiUrl}
+                </code>
               </p>
-              <Input
-                id="apiUrl"
-                name="apiUrl"
-                className="bg-background"
-                defaultValue={apiUrl || DEFAULT_API_URL}
-                required
-              />
             </div>
 
             <div className="flex flex-col gap-2">
@@ -257,7 +251,11 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   }
 
   return (
-    <StreamSession apiKey={apiKey} apiUrl={apiUrl} assistantId={assistantId}>
+    <StreamSession
+      apiKey={apiKey || null}
+      apiUrl={envApiUrl}
+      assistantId={finalAssistantId}
+    >
       {children}
     </StreamSession>
   );
