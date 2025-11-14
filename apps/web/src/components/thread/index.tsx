@@ -35,6 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { UserButton } from "@clerk/nextjs";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -94,6 +95,7 @@ function OpenGitHubRepo() {
     </TooltipProvider>
   );
 }
+
 
 export function Thread() {
   const [threadId, setThreadId] = useQueryState("threadId");
@@ -264,7 +266,8 @@ export function Thread() {
                 </Button>
               )}
             </div>
-            <div className="absolute top-2 right-4 flex items-center">
+            <div className="absolute top-2 right-4 flex items-center gap-4">
+              <UserButton />
               <OpenGitHubRepo />
             </div>
           </div>
@@ -307,6 +310,8 @@ export function Thread() {
             </div>
 
             <div className="flex items-center gap-4">
+              <UserButton />
+
               <div className="flex items-center">
                 <OpenGitHubRepo />
               </div>

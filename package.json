@@ -32,5 +32,8 @@
   "resolutions": {
     "@langchain/core": "^0.3.42"
   },
-  "packageManager": "yarn@3.5.1"
+  "packageManager": "yarn@3.5.1",
+  "dependencies": {
+    "@clerk/nextjs": "^6.35.1"
+  }
 }
